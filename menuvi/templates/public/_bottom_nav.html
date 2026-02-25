@@ -1,0 +1,18 @@
+<nav class="bottom-nav">
+  <a href="{{ url_for('public.menu', menu_type='dining') }}">
+    <span class="nav-icon">&#127869;</span>
+    Dining
+  </a>
+  <a href="{{ url_for('public.menu', menu_type='beverages') }}">
+    <span class="nav-icon">&#127864;</span>
+    Drinks
+  </a>
+  <a href="{{ url_for('public.search') }}">
+    <span class="nav-icon">&#128269;</span>
+    Search
+  </a>
+  <a href="{{ url_for('public.picks') }}">
+    <span class="nav-icon">&#11088;</span>
+    My Picks
+  </a>
+</nav>

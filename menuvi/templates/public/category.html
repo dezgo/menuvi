@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<header class="topbar">
+  <a href="{{ url_for('public.menu', menu_type=category.menu_type) }}" class="topbar-back">&#8592; Back</a>
+  <span class="topbar-title">{{ category.name }}</span>
+  <a href="{{ url_for('public.picks') }}" class="topbar-picks">
+    My Picks
+    {% if picks %}<span class="badge">{{ picks|length }}</span>{% endif %}
+  </a>
+</header>
+
+<main class="container">
+  <div class="items-list">
+    {% for item in items %}
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-name">
+          <a href="{{ url_for('public.item_detail', item_id=item.id) }}">{{ item.name }}</a>
+        </div>
+        {% if item.description %}
+        <div class="item-desc">{{ item.description }}</div>
+        {% endif %}
+      </div>
+      <div class="item-actions">
+        {% if item.price_display %}
+        <span class="item-price">{{ item.price_display }}</span>
+        {% endif %}
+        {% if item.id in picks %}
+          <button class="btn btn-sm btn-picked" disabled>Picked</button>
+        {% else %}
+          <form method="post" action="{{ url_for('public.pick_add', item_id=item.id) }}" class="pick-form">
+            <button type="submit" class="btn btn-sm">+ Pick</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+{% include "public/_bottom_nav.html" %}
+{% endblock %}

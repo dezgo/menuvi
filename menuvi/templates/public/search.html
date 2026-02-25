@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Search — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<header class="topbar">
+  <a href="{{ url_for('public.landing') }}" class="topbar-back">&#8592; Menu</a>
+  <span class="topbar-title">Search</span>
+  <a href="{{ url_for('public.picks') }}" class="topbar-picks">
+    My Picks
+    {% if picks %}<span class="badge">{{ picks|length }}</span>{% endif %}
+  </a>
+</header>
+
+<main class="container">
+  <div class="search-wrap">
+    <form action="{{ url_for('public.search') }}" method="get">
+      <input type="search" name="q" class="search-input" placeholder="Search items..."
+             value="{{ query }}" autofocus autocomplete="off">
+    </form>
+  </div>
+
+  {% if query %}
+  <div class="items-list">
+    {% for item in results %}
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-name">
+          <a href="{{ url_for('public.item_detail', item_id=item.id) }}">{{ item.name }}</a>
+        </div>
+        <div class="item-desc">{{ item.category.name }}</div>
+      </div>
+      <div class="item-actions">
+        {% if item.price_display %}
+        <span class="item-price">{{ item.price_display }}</span>
+        {% endif %}
+        {% if item.id in picks %}
+          <button class="btn btn-sm btn-picked" disabled>Picked</button>
+        {% else %}
+          <form method="post" action="{{ url_for('public.pick_add', item_id=item.id) }}" class="pick-form">
+            <button type="submit" class="btn btn-sm">+ Pick</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p style="text-align:center; color:var(--text-dim); padding:2rem 0;">
+      No items found for "{{ query }}".
+    </p>
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+
+{% include "public/_bottom_nav.html" %}
+{% endblock %}

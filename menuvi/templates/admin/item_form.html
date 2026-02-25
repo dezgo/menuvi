@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit" if item else "New" }} Item — Admin{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <h1>{{ "Edit" if item else "New" }} Item</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for c, msg in messages %}
+  <div class="flash flash-{{ c }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" name="name" id="name" value="{{ item.name if item else '' }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea name="description" id="description">{{ item.description if item else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price">Price (e.g. 22.90)</label>
+      <input type="text" name="price" id="price" inputmode="decimal"
+             value="{{ '%.2f' % (item.price_cents / 100) if item and item.price_cents else '' }}">
+    </div>
+
+    {% if item and categories is defined %}
+    <div class="form-group">
+      <label for="category_id">Category</label>
+      <select name="category_id" id="category_id">
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {{ 'selected' if cat.id == item.category_id }}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label for="sort_order">Sort Order</label>
+      <input type="number" name="sort_order" id="sort_order" value="{{ item.sort_order if item else 0 }}">
+    </div>
+
+    <div class="form-check">
+      <input type="checkbox" name="available" id="available"
+             {{ 'checked' if not item or item.available }}>
+      <label for="available">Available</label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-solid">{{ "Save" if item else "Create" }}</button>
+      <a href="{{ url_for('admin.item_list', cat_id=category.id) }}" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

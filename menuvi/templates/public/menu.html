@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Dining" if menu_type == "dining" else "Beverages" }} — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<header class="topbar">
+  <a href="{{ url_for('public.landing') }}" class="topbar-back">&#8592; Menu</a>
+  <span class="topbar-title">{{ restaurant_name }}</span>
+  <a href="{{ url_for('public.picks') }}" class="topbar-picks">
+    My Picks
+    {% if picks %}<span class="badge">{{ picks|length }}</span>{% endif %}
+  </a>
+</header>
+
+<main class="container">
+  <div class="menu-header">
+    <h2>{{ "Dining" if menu_type == "dining" else "Beverages" }}</h2>
+  </div>
+
+  <div class="search-wrap">
+    <form action="{{ url_for('public.search') }}" method="get">
+      <input type="search" name="q" class="search-input" placeholder="Search items..." autocomplete="off">
+    </form>
+  </div>
+
+  <div class="cat-list">
+    {% for cat in categories %}
+    <a href="{{ url_for('public.category', category_id=cat.id) }}" class="cat-card">
+      <h3>{{ cat.name }}</h3>
+      <span class="count">{{ cat.items|selectattr('available')|list|length }} items</span>
+    </a>
+    {% else %}
+    <p style="text-align:center; color:var(--text-dim); padding:3rem 0;">No categories yet.</p>
+    {% endfor %}
+  </div>
+</main>
+
+{% include "public/_bottom_nav.html" %}
+{% endblock %}

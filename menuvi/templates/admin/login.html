@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<div class="admin-login">
+  <h1 style="color:var(--gold)">Admin</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required autofocus>
+    </div>
+    <button type="submit" class="btn btn-solid" style="width:100%">Log In</button>
+  </form>
+</div>
+{% endblock %}

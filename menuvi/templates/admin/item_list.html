@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} Items — Admin{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+    <h1>{{ category.name }}</h1>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm">&#8592; Back</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <div style="margin-bottom:1rem;">
+    <a href="{{ url_for('admin.item_new', cat_id=category.id) }}" class="btn btn-sm btn-solid">+ New Item</a>
+  </div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Price</th>
+        <th>Avail</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr class="{{ 'unavailable' if not item.available }}">
+        <td>
+          {{ item.name }}
+          {% if item.description %}
+          <br><small style="color:var(--text-dim)">{{ item.description[:60] }}{{ '...' if item.description|length > 60 }}</small>
+          {% endif %}
+        </td>
+        <td>{{ item.price_display }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.item_toggle', item_id=item.id) }}">
+            <button type="submit" class="btn btn-sm" style="font-size:0.7rem">
+              {{ "Yes" if item.available else "No" }}
+            </button>
+          </form>
+        </td>
+        <td>
+          <div class="inline-actions">
+            <a href="{{ url_for('admin.item_edit', item_id=item.id) }}" class="btn btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('admin.item_delete', item_id=item.id) }}"
+                  onsubmit="return confirm('Delete {{ item.name }}?')">
+              <button type="submit" class="btn btn-sm btn-danger">Del</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center; color:var(--text-dim)">No items yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

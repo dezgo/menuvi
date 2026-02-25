@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1>Menu Manager</h1>
+    <a href="{{ url_for('admin.logout') }}" class="btn btn-sm">Logout</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <div style="margin-bottom:1rem;">
+    <a href="{{ url_for('admin.category_new') }}" class="btn btn-sm btn-solid">+ New Category</a>
+    <a href="{{ url_for('public.landing') }}" class="btn btn-sm" style="margin-left:0.5rem;">View Site</a>
+  </div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Type</th>
+        <th>Items</th>
+        <th>Order</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cat in categories %}
+      <tr>
+        <td><a href="{{ url_for('admin.item_list', cat_id=cat.id) }}">{{ cat.name }}</a></td>
+        <td>{{ cat.menu_type }}</td>
+        <td>{{ cat.items|length }}</td>
+        <td>{{ cat.sort_order }}</td>
+        <td>
+          <div class="inline-actions">
+            <a href="{{ url_for('admin.category_edit', cat_id=cat.id) }}" class="btn btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('admin.category_delete', cat_id=cat.id) }}"
+                  onsubmit="return confirm('Delete {{ cat.name }} and all its items?')">
+              <button type="submit" class="btn btn-sm btn-danger">Del</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align:center; color:var(--text-dim)">No categories yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

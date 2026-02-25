@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<div class="landing">
+  <h1>{{ restaurant_name }}</h1>
+  <p class="subtitle">{{ restaurant_tagline }}</p>
+
+  <div class="landing-choices">
+    <a href="{{ url_for('public.menu', menu_type='dining') }}" class="landing-btn">
+      Dining Menu
+    </a>
+    <a href="{{ url_for('public.menu', menu_type='beverages') }}" class="landing-btn">
+      Beverages
+    </a>
+  </div>
+
+  <p class="landing-hint">
+    Browse our menu, tap items you like, then show your picks to your waiter.
+  </p>
+</div>
+{% endblock %}
