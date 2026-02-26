@@ -1,18 +1,7 @@
+# HTTP-only config — certbot will add the SSL block automatically
 server {
     listen 80;
     server_name menuvi.appfoundry.cc;
-
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name menuvi.appfoundry.cc;
-
-    # SSL — update paths to your cert (e.g. Let's Encrypt)
-    ssl_certificate     /etc/letsencrypt/live/menuvi.appfoundry.cc/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/menuvi.appfoundry.cc/privkey.pem;
 
     # Security headers
     add_header X-Frame-Options DENY;
