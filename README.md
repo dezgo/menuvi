@@ -1,23 +1,27 @@
 # MenuVi
 
-A mobile-friendly digital menu web app for restaurants. Customers scan a QR code, browse the menu on their phone, pick items they want, and show their selections to the waiter.
+A multi-restaurant digital menu platform. Customers scan a QR code, browse the menu on their phone, pick items they want, and show their selections to the waiter.
 
 **Not an ordering system** — it's a beautiful, readable menu that works better than a paper menu in dim restaurant lighting.
 
 ## Features
 
-- **Landing page** — choose Dining or Beverages menu
+- **Multi-restaurant support** — one deployment serves multiple restaurants, each with their own menu, branding, and admin users
+- **Restaurant directory** — root page lists all restaurants
+- **Per-restaurant URLs** — `/<slug>/menu/dining`, `/<slug>/admin/`, etc.
 - **Category browsing** — tap through categories to see items
 - **Item details** — name, description, price
 - **My Picks** — shortlist items, then show the list to your waiter (big-font "Show Waiter" mode)
-- **Search** — find items by name
-- **Admin panel** — full CRUD for categories and items, toggle availability, password-protected
-- **Configurable branding** — restaurant name, tagline, and accent color via environment variables
+- **Search** — find items by name within a restaurant
+- **Admin panel** — per-restaurant CRUD for categories and items, toggle availability, QR code generator
+- **Superadmin panel** — manage restaurants, users, and branding at `/superadmin/`
+- **User accounts** — email/password auth with owner and superadmin roles
+- **Per-restaurant branding** — name, tagline, and accent colors stored in the database
+- **SEO** — meta descriptions, Open Graph tags, sitemap.xml, robots.txt
 
 ## Quick Start
 
 ```bash
-# Clone and enter the project
 cd menuvi
 
 # Create a virtual environment
@@ -29,83 +33,70 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and set your ADMIN_PASSWORD and SECRET_KEY
+# Edit .env and set your SECRET_KEY
 
-# Seed the database with sample menu data
+# Seed the database with sample menu data (Jewel of India)
 flask seed
+
+# Create a superadmin user
+flask create-superadmin
 
 # Run the dev server
 flask run
 ```
 
-Open http://localhost:5000 to see the customer menu.
-Open http://localhost:5000/admin to manage the menu.
+Open http://localhost:5000 to see the restaurant directory.
+Open http://localhost:5000/jewel-of-india/ to see the sample restaurant menu.
+Open http://localhost:5000/superadmin/ to manage restaurants and users.
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `SECRET_KEY` | `dev-secret-key-change-me` | Flask session signing key (change in production!) |
-| `ADMIN_PASSWORD` | `admin` | Password for the /admin panel |
 | `DATABASE_URL` | `sqlite:///instance/menuvi.db` | Database connection string |
-| `RESTAURANT_NAME` | `Jewel of India` | Displayed on landing page and headers |
-| `RESTAURANT_TAGLINE` | `Fine Indian Cuisine` | Subtitle on landing page |
-| `BRAND_COLOR` | `#c9a84c` | Primary accent color (gold) |
-| `BRAND_COLOR_DIM` | `#a68939` | Hover/secondary accent color |
+| `MAX_UPLOAD_MB` | `10` | Max upload size in MB |
 
 ## Admin Panel
 
-1. Navigate to `/admin`
-2. Log in with `ADMIN_PASSWORD`
-3. Create/edit/delete categories and items
-4. Toggle item availability (e.g., "86'd" items)
-5. Set menu type per category: `dining` or `beverages`
-6. Control sort order for categories and items
+Each restaurant has its own admin panel at `/<slug>/admin/`:
+
+1. Log in with your email and password
+2. Create/edit/delete categories and items
+3. Toggle item availability (e.g., "86'd" items)
+4. Set menu type per category: `dining` or `beverages`
+5. Control sort order for categories and items
+6. Generate and download QR codes for tables
+
+## Superadmin Panel
+
+Manage the entire platform at `/superadmin/`:
+
+1. Create and edit restaurants (name, slug, tagline, brand colors)
+2. Create and manage user accounts (owner or superadmin roles)
+3. Jump into any restaurant's admin panel
 
 ## QR Code Setup
 
-Generate a QR code pointing to your deployed URL (e.g., `https://menu.yourrestaurant.com`). Place it on tables. Customers scan and land on the menu chooser.
+Each restaurant's admin panel has a QR code generator. The QR code points to `/<slug>/` so customers land directly on that restaurant's menu.
 
 ## Running Tests
 
 ```bash
-pip install pytest
 python -m pytest tests/ -v
 ```
 
 ## Deployment (Gunicorn + Nginx)
 
 ```bash
-# Install gunicorn (already in requirements.txt)
-pip install gunicorn
+# First-time setup
+bash deploy/setup.sh
 
-# Run with gunicorn
-gunicorn "menuvi:create_app()" -b 0.0.0.0:8000 -w 2
+# Create superadmin
+FLASK_APP=menuvi .venv/bin/flask create-superadmin
 
-# Seed on the server
-FLASK_APP=menuvi flask seed
-```
-
-Nginx config (minimal):
-
-```nginx
-server {
-    listen 80;
-    server_name menu.yourrestaurant.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /static/ {
-        alias /path/to/menuvi/menuvi/static/;
-        expires 7d;
-    }
-}
+# Ongoing deploys
+bash deploy/update.sh
 ```
 
 ## Project Structure
@@ -113,22 +104,26 @@ server {
 ```
 menuvi/
 ├── menuvi/
-│   ├── __init__.py          # App factory (create_app)
+│   ├── __init__.py          # App factory, Flask-Login, error handlers
 │   ├── config.py            # Configuration from env vars
-│   ├── models.py            # SQLAlchemy models (Category, MenuItem)
-│   ├── cli.py               # Flask CLI commands (seed)
-│   ├── seed_data.py         # Seed data from Jewel of India menu
+│   ├── models.py            # Restaurant, User, Category, MenuItem
+│   ├── cli.py               # CLI commands (seed, create-superadmin)
+│   ├── seed_data.py         # Sample menu data (Jewel of India)
 │   ├── blueprints/
-│   │   ├── public.py        # Customer-facing routes
-│   │   └── admin.py         # Admin CRUD routes
+│   │   ├── public.py        # Customer routes (directory, menu, picks, SEO)
+│   │   ├── admin.py         # Per-restaurant admin CRUD
+│   │   └── superadmin.py    # Platform admin (restaurants, users)
 │   ├── templates/
-│   │   ├── base.html        # Base layout with branding
+│   │   ├── base.html        # Base layout with SEO and branding
 │   │   ├── public/          # Customer templates
-│   │   └── admin/           # Admin templates
+│   │   ├── admin/           # Restaurant admin templates
+│   │   ├── superadmin/      # Platform admin templates
+│   │   └── errors/          # 404, 403, 500 pages
 │   └── static/
 │       ├── css/style.css    # Mobile-first dark theme
 │       └── js/app.js        # Progressive enhancement for picks
-├── tests/                   # pytest test suite
+├── tests/                   # pytest test suite (23 tests)
+├── deploy/                  # systemd, nginx, setup/update scripts
 ├── instance/                # SQLite DB (gitignored)
 ├── requirements.txt
 ├── .env.example
