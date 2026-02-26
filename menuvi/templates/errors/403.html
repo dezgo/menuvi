@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied — {{ restaurant_name }}{% endblock %}
+
+{% block body %}
+<div class="landing">
+  <h1 style="font-size:4rem; margin-bottom:0.5rem;">403</h1>
+  <p class="subtitle">Access denied</p>
+  <p style="color:var(--text-dim); margin:1.5rem 0;">
+    You don't have permission to view this page.
+  </p>
+  <a href="{{ url_for('public.directory') }}" class="btn btn-solid">Browse Restaurants</a>
+</div>
+{% endblock %}
