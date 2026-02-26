@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ category.name }} — {{ restaurant_name }}{% endblock %}
+{% block meta_description %}{{ category.name }} at {{ restaurant_name }}. View dishes and prices in this category.{% endblock %}
 
 {% block body %}
 <header class="topbar">

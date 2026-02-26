@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}{{ restaurant_name }}{% endblock %}
+{% block title %}{{ restaurant_name }} — {{ restaurant_tagline }}{% endblock %}
+{% block meta_description %}View the full menu for {{ restaurant_name }}{% if restaurant_tagline %} — {{ restaurant_tagline }}{% endif %}. Browse dining and beverages, see prices, and build your shortlist.{% endblock %}
 
 {% block body %}
 <div class="landing">

@@ -1,6 +1,6 @@
 from flask import (
     Blueprint, render_template, session, redirect, url_for, request, jsonify,
-    g, abort,
+    g, abort, Response,
 )
 from ..models import db, Category, MenuItem, Restaurant
 
@@ -20,6 +20,32 @@ def _get_picks() -> list[int]:
 
 def _set_picks(picks: list[int]):
     session["picks"] = picks
+
+
+# ── SEO ─────────────────────────────────────────────────────────────────────
+@public_bp.route("/robots.txt")
+def robots():
+    base = request.url_root.rstrip("/")
+    content = f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n"
+    return Response(content, mimetype="text/plain")
+
+
+@public_bp.route("/sitemap.xml")
+def sitemap():
+    base = request.url_root.rstrip("/")
+    urls = [base + "/"]
+    for r in Restaurant.query.all():
+        urls.append(base + url_for("public.landing", slug=r.slug))
+        for menu_type in ("dining", "beverages"):
+            urls.append(base + url_for("public.menu", slug=r.slug, menu_type=menu_type))
+        for cat in Category.query.filter_by(restaurant_id=r.id).all():
+            urls.append(base + url_for("public.category", slug=r.slug, category_id=cat.id))
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for u in urls:
+        xml += f"  <url><loc>{u}</loc></url>\n"
+    xml += "</urlset>\n"
+    return Response(xml, mimetype="application/xml")
 
 
 # ── directory (root) ────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}{{ "Dining" if menu_type == "dining" else "Beverages" }} — {{ restaurant_name }}{% endblock %}
+{% block title %}{{ "Dining" if menu_type == "dining" else "Beverages" }} Menu — {{ restaurant_name }}{% endblock %}
+{% block meta_description %}{{ "Dining" if menu_type == "dining" else "Beverages" }} menu for {{ restaurant_name }}. Browse categories, view prices, and pick your favourites.{% endblock %}
 
 {% block body %}
 <header class="topbar">

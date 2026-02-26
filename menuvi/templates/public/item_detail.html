@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ item.name }} — {{ restaurant_name }}{% endblock %}
+{% block meta_description %}{{ item.name }}{% if item.price_display %} ({{ item.price_display }}){% endif %} at {{ restaurant_name }}.{% if item.description %} {{ item.description[:120] }}{% endif %}{% endblock %}
 
 {% block body %}
 <header class="topbar">

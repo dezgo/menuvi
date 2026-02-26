@@ -4,6 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}{{ restaurant_name }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Browse the menu for {{ restaurant_name }}{% if restaurant_tagline %} — {{ restaurant_tagline }}{% endif %}. View dishes, prices, and build your shortlist.{% endblock %}">
+  <meta name="theme-color" content="{{ brand_color }}">
+  <link rel="canonical" href="{{ request.url }}">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:site_name" content="MenuVi">
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <style>
     :root {
