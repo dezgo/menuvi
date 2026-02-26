@@ -4,7 +4,7 @@ from flask import (
 )
 from ..models import db, Category, MenuItem, Restaurant
 
-public_bp = Blueprint("public", __name__, template_folder="../templates/public")
+public_bp = Blueprint("public", __name__)
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -26,14 +26,14 @@ def _set_picks(picks: list[int]):
 @public_bp.route("/")
 def directory():
     restaurants = Restaurant.query.order_by(Restaurant.name).all()
-    return render_template("directory.html", restaurants=restaurants)
+    return render_template("public/directory.html", restaurants=restaurants)
 
 
 # ── landing page ─────────────────────────────────────────────────────────────
 @public_bp.route("/<slug>/")
 def landing(slug):
     _load_restaurant(slug)
-    return render_template("landing.html")
+    return render_template("public/landing.html")
 
 
 # ── menu listing ─────────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ def menu(slug, menu_type):
         .all()
     )
     return render_template(
-        "menu.html",
+        "public/menu.html",
         categories=categories,
         menu_type=menu_type,
         picks=_get_picks(),
@@ -70,7 +70,7 @@ def category(slug, category_id):
         .all()
     )
     return render_template(
-        "category.html", category=cat, items=items, picks=_get_picks(),
+        "public/category.html", category=cat, items=items, picks=_get_picks(),
     )
 
 
@@ -82,7 +82,7 @@ def item_detail(slug, item_id):
     if item.category.restaurant_id != restaurant.id:
         abort(404)
     return render_template(
-        "item_detail.html", item=item, picks=_get_picks(),
+        "public/item_detail.html", item=item, picks=_get_picks(),
     )
 
 
@@ -103,7 +103,7 @@ def search(slug):
             .limit(50)
             .all()
         )
-    return render_template("search.html", query=q, results=results, picks=_get_picks())
+    return render_template("public/search.html", query=q, results=results, picks=_get_picks())
 
 
 # ── shortlist ("My Picks") ──────────────────────────────────────────────────
@@ -116,7 +116,7 @@ def picks(slug):
     by_cat: dict[str, list[MenuItem]] = {}
     for item in items:
         by_cat.setdefault(item.category.name, []).append(item)
-    return render_template("picks.html", by_category=by_cat, picks=pick_ids)
+    return render_template("public/picks.html", by_category=by_cat, picks=pick_ids)
 
 
 @public_bp.route("/<slug>/picks/add/<int:item_id>", methods=["POST"])

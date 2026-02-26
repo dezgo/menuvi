@@ -8,7 +8,7 @@ from flask import (
 from flask_login import login_user, logout_user, login_required, current_user
 from ..models import db, Category, MenuItem, Restaurant, User
 
-admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
+admin_bp = Blueprint("admin", __name__)
 
 
 # ── helpers ─────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ def login(slug):
                 dest = request.args.get("next") or url_for("admin.dashboard", slug=slug)
                 return redirect(dest)
         flash("Invalid email or password.", "error")
-    return render_template("login.html")
+    return render_template("admin/login.html")
 
 
 @admin_bp.route("/<slug>/admin/logout")
@@ -64,7 +64,7 @@ def dashboard(slug):
         .order_by(Category.sort_order)
         .all()
     )
-    return render_template("dashboard.html", categories=categories)
+    return render_template("admin/dashboard.html", categories=categories)
 
 
 # ── category CRUD ────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ def category_new(slug):
         sort_order = int(request.form.get("sort_order", 0))
         if not name:
             flash("Name is required.", "error")
-            return render_template("category_form.html", cat=None)
+            return render_template("admin/category_form.html", cat=None)
         cat = Category(
             restaurant_id=g.restaurant.id,
             name=name,
@@ -88,7 +88,7 @@ def category_new(slug):
         db.session.commit()
         flash(f"Category '{name}' created.", "success")
         return redirect(url_for("admin.dashboard", slug=slug))
-    return render_template("category_form.html", cat=None)
+    return render_template("admin/category_form.html", cat=None)
 
 
 @admin_bp.route("/<slug>/admin/category/<int:cat_id>/edit", methods=["GET", "POST"])
@@ -104,7 +104,7 @@ def category_edit(slug, cat_id):
         db.session.commit()
         flash(f"Category '{cat.name}' updated.", "success")
         return redirect(url_for("admin.dashboard", slug=slug))
-    return render_template("category_form.html", cat=cat)
+    return render_template("admin/category_form.html", cat=cat)
 
 
 @admin_bp.route("/<slug>/admin/category/<int:cat_id>/delete", methods=["POST"])
@@ -128,7 +128,7 @@ def item_list(slug, cat_id):
     if cat.restaurant_id != g.restaurant.id:
         abort(404)
     items = MenuItem.query.filter_by(category_id=cat.id).order_by(MenuItem.sort_order).all()
-    return render_template("item_list.html", category=cat, items=items)
+    return render_template("admin/item_list.html", category=cat, items=items)
 
 
 @admin_bp.route("/<slug>/admin/category/<int:cat_id>/item/new", methods=["GET", "POST"])
@@ -148,7 +148,7 @@ def item_new(slug, cat_id):
 
         if not name:
             flash("Name is required.", "error")
-            return render_template("item_form.html", category=cat, item=None)
+            return render_template("admin/item_form.html", category=cat, item=None)
 
         item = MenuItem(
             category_id=cat.id,
@@ -162,7 +162,7 @@ def item_new(slug, cat_id):
         db.session.commit()
         flash(f"Item '{name}' created.", "success")
         return redirect(url_for("admin.item_list", slug=slug, cat_id=cat.id))
-    return render_template("item_form.html", category=cat, item=None)
+    return render_template("admin/item_form.html", category=cat, item=None)
 
 
 @admin_bp.route("/<slug>/admin/item/<int:item_id>/edit", methods=["GET", "POST"])
@@ -188,7 +188,7 @@ def item_edit(slug, item_id):
         .order_by(Category.sort_order)
         .all()
     )
-    return render_template("item_form.html", category=cat, item=item, categories=categories)
+    return render_template("admin/item_form.html", category=cat, item=item, categories=categories)
 
 
 @admin_bp.route("/<slug>/admin/item/<int:item_id>/delete", methods=["POST"])
@@ -223,7 +223,7 @@ def item_toggle(slug, item_id):
 @admin_required
 def qr_code(slug):
     site_url = request.url_root.rstrip("/") + url_for("public.landing", slug=slug)
-    return render_template("qr.html", site_url=site_url)
+    return render_template("admin/qr.html", site_url=site_url)
 
 
 @admin_bp.route("/<slug>/admin/qr/download")

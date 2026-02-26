@@ -7,9 +7,7 @@ from flask import (
 from flask_login import login_user, logout_user, login_required, current_user
 from ..models import db, Restaurant, User
 
-superadmin_bp = Blueprint(
-    "superadmin", __name__, template_folder="../templates/superadmin",
-)
+superadmin_bp = Blueprint("superadmin", __name__)
 
 
 # ── auth helpers ─────────────────────────────────────────────────────────────
@@ -35,7 +33,7 @@ def login():
             login_user(user)
             return redirect(url_for("superadmin.dashboard"))
         flash("Invalid credentials or insufficient permissions.", "error")
-    return render_template("login.html")
+    return render_template("superadmin/login.html")
 
 
 @superadmin_bp.route("/logout")
@@ -50,7 +48,7 @@ def logout():
 def dashboard():
     restaurants = Restaurant.query.order_by(Restaurant.name).all()
     users = User.query.order_by(User.email).all()
-    return render_template("dashboard.html", restaurants=restaurants, users=users)
+    return render_template("superadmin/dashboard.html", restaurants=restaurants, users=users)
 
 
 # ── restaurant CRUD ──────────────────────────────────────────────────────────
@@ -71,10 +69,10 @@ def restaurant_new():
 
         if not name:
             flash("Name is required.", "error")
-            return render_template("restaurant_form.html", restaurant=None)
+            return render_template("superadmin/restaurant_form.html", restaurant=None)
         if Restaurant.query.filter_by(slug=slug).first():
             flash(f"Slug '{slug}' is already taken.", "error")
-            return render_template("restaurant_form.html", restaurant=None)
+            return render_template("superadmin/restaurant_form.html", restaurant=None)
 
         r = Restaurant(
             name=name, slug=slug, tagline=tagline,
@@ -84,7 +82,7 @@ def restaurant_new():
         db.session.commit()
         flash(f"Restaurant '{name}' created.", "success")
         return redirect(url_for("superadmin.dashboard"))
-    return render_template("restaurant_form.html", restaurant=None)
+    return render_template("superadmin/restaurant_form.html", restaurant=None)
 
 
 @superadmin_bp.route("/restaurant/<int:restaurant_id>/edit", methods=["GET", "POST"])
@@ -97,7 +95,7 @@ def restaurant_edit(restaurant_id):
         if new_slug != r.slug:
             if Restaurant.query.filter_by(slug=new_slug).first():
                 flash(f"Slug '{new_slug}' is already taken.", "error")
-                return render_template("restaurant_form.html", restaurant=r)
+                return render_template("superadmin/restaurant_form.html", restaurant=r)
             r.slug = new_slug
         r.tagline = request.form.get("tagline", "").strip()
         r.brand_color = request.form.get("brand_color", r.brand_color).strip()
@@ -105,7 +103,7 @@ def restaurant_edit(restaurant_id):
         db.session.commit()
         flash(f"Restaurant '{r.name}' updated.", "success")
         return redirect(url_for("superadmin.dashboard"))
-    return render_template("restaurant_form.html", restaurant=r)
+    return render_template("superadmin/restaurant_form.html", restaurant=r)
 
 
 @superadmin_bp.route("/restaurant/<int:restaurant_id>/delete", methods=["POST"])
@@ -132,10 +130,10 @@ def user_new():
 
         if not email or not password:
             flash("Email and password are required.", "error")
-            return render_template("user_form.html", user=None, restaurants=restaurants)
+            return render_template("superadmin/user_form.html", user=None, restaurants=restaurants)
         if User.query.filter_by(email=email).first():
             flash(f"Email '{email}' already exists.", "error")
-            return render_template("user_form.html", user=None, restaurants=restaurants)
+            return render_template("superadmin/user_form.html", user=None, restaurants=restaurants)
 
         user = User(
             email=email,
@@ -147,7 +145,7 @@ def user_new():
         db.session.commit()
         flash(f"User '{email}' created.", "success")
         return redirect(url_for("superadmin.dashboard"))
-    return render_template("user_form.html", user=None, restaurants=restaurants)
+    return render_template("superadmin/user_form.html", user=None, restaurants=restaurants)
 
 
 @superadmin_bp.route("/user/<int:user_id>/edit", methods=["GET", "POST"])
@@ -166,7 +164,7 @@ def user_edit(user_id):
         db.session.commit()
         flash(f"User '{user.email}' updated.", "success")
         return redirect(url_for("superadmin.dashboard"))
-    return render_template("user_form.html", user=user, restaurants=restaurants)
+    return render_template("superadmin/user_form.html", user=user, restaurants=restaurants)
 
 
 @superadmin_bp.route("/user/<int:user_id>/delete", methods=["POST"])
