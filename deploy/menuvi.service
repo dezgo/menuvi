@@ -8,7 +8,7 @@ Group=www-data
 WorkingDirectory=/var/www/menuvi
 EnvironmentFile=/var/www/menuvi/.env
 ExecStart=/var/www/menuvi/.venv/bin/gunicorn "menuvi:create_app()" \
-    --bind 127.0.0.1:8000 \
+    --bind 127.0.0.1:8010 \
     --workers 2 \
     --timeout 30 \
     --access-logfile /var/log/menuvi/access.log \
