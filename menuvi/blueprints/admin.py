@@ -1,8 +1,9 @@
 import functools
+import io
 
 from flask import (
     Blueprint, render_template, request, redirect, url_for, session, flash,
-    current_app,
+    current_app, send_file,
 )
 from ..models import db, Category, MenuItem
 
@@ -170,6 +171,31 @@ def item_toggle(item_id):
     status = "available" if item.available else "unavailable"
     flash(f"'{item.name}' marked as {status}.", "success")
     return redirect(url_for("admin.item_list", cat_id=item.category_id))
+
+
+# ── QR code ──────────────────────────────────────────────────────────────────
+@admin_bp.route("/qr")
+@admin_required
+def qr_code():
+    site_url = request.url_root.rstrip("/")
+    return render_template("qr.html", site_url=site_url)
+
+
+@admin_bp.route("/qr/download")
+@admin_required
+def qr_download():
+    import qrcode
+
+    site_url = request.url_root.rstrip("/")
+    qr = qrcode.QRCode(box_size=20, border=2)
+    qr.add_data(site_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png", download_name="menuvi-qr.png")
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
