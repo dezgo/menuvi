@@ -5,7 +5,7 @@
 #
 set -euo pipefail
 
-APP_DIR="/opt/menuvi"
+APP_DIR="/var/www/menuvi"
 APP_USER="www-data"
 LOG_DIR="/var/log/menuvi"
 

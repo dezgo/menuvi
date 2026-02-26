@@ -21,7 +21,7 @@ server {
 
     # Static files — served directly by nginx
     location /static/ {
-        alias /opt/menuvi/menuvi/static/;
+        alias /var/www/menuvi/menuvi/static/;
         expires 7d;
         access_log off;
     }

@@ -4,16 +4,16 @@
 
 ```bash
 # 1. Clone the repo on your server
-cd /opt
-git clone git@github-personal:dezgo/menuvi.git
+cd /var/www
+git clone https://github.com/dezgo/menuvi.git
 
 # 2. Edit config
-cp /opt/menuvi/.env.example /opt/menuvi/.env
-nano /opt/menuvi/.env
+cp /var/www/menuvi/.env.example /var/www/menuvi/.env
+nano /var/www/menuvi/.env
 # Set: SECRET_KEY, ADMIN_PASSWORD, RESTAURANT_NAME, etc.
 
 # 3. Run the setup script
-sudo bash /opt/menuvi/deploy/setup.sh
+sudo bash /var/www/menuvi/deploy/setup.sh
 
 # 4. Set up HTTPS (optional but recommended)
 sudo apt install certbot python3-certbot-nginx
@@ -23,7 +23,7 @@ sudo certbot --nginx -d menuvi.appfoundry.cc
 ## What the setup script does
 
 1. Installs Python 3, nginx
-2. Creates a virtualenv at `/opt/menuvi/.venv`
+2. Creates a virtualenv at `/var/www/menuvi/.venv`
 3. Installs pip dependencies
 4. Creates `.env` from template with a random `SECRET_KEY`
 5. Seeds the database
@@ -49,11 +49,11 @@ sudo journalctl -u menuvi -f
 tail -f /var/log/menuvi/error.log
 
 # Restart after code changes
-cd /opt/menuvi && git pull
+cd /var/www/menuvi && git pull
 sudo systemctl restart menuvi
 
 # Re-seed the database
-cd /opt/menuvi
+cd /var/www/menuvi
 sudo -u www-data FLASK_APP=menuvi .venv/bin/flask seed --drop
 sudo systemctl restart menuvi
 ```
