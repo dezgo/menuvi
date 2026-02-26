@@ -17,7 +17,7 @@ sudo bash /opt/menuvi/deploy/setup.sh
 
 # 4. Set up HTTPS (optional but recommended)
 sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d menu.example.com
+sudo certbot --nginx -d menuvi.appfoundry.cc
 ```
 
 ## What the setup script does
@@ -60,6 +60,6 @@ sudo systemctl restart menuvi
 
 ## Updating nginx domain
 
-1. Edit `deploy/menuvi.nginx` — replace `menu.example.com` with your domain
+1. Edit `deploy/menuvi.nginx` — update `server_name` and SSL cert paths
 2. Copy to server: `sudo cp deploy/menuvi.nginx /etc/nginx/sites-available/menuvi`
 3. Test and reload: `sudo nginx -t && sudo systemctl reload nginx`
