@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit" if restaurant else "New" }} Restaurant — Superadmin{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <h1>{{ "Edit" if restaurant else "New" }} Restaurant</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for c, msg in messages %}
+  <div class="flash flash-{{ c }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" name="name" id="name" value="{{ restaurant.name if restaurant else '' }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="slug">Slug (URL-safe, auto-generated if blank)</label>
+      <input type="text" name="slug" id="slug" value="{{ restaurant.slug if restaurant else '' }}"
+             pattern="[a-z0-9\-]+" placeholder="e.g. jewel-of-india">
+    </div>
+
+    <div class="form-group">
+      <label for="tagline">Tagline</label>
+      <input type="text" name="tagline" id="tagline" value="{{ restaurant.tagline if restaurant else '' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="brand_color">Brand Color</label>
+      <input type="color" name="brand_color" id="brand_color"
+             value="{{ restaurant.brand_color if restaurant else '#c9a84c' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="brand_color_dim">Brand Color (Dim)</label>
+      <input type="color" name="brand_color_dim" id="brand_color_dim"
+             value="{{ restaurant.brand_color_dim if restaurant else '#a68939' }}">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-solid">{{ "Save" if restaurant else "Create" }}</button>
+      <a href="{{ url_for('superadmin.dashboard') }}" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

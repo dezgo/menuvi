@@ -2,54 +2,75 @@ import functools
 import io
 
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, session, flash,
-    current_app, send_file,
+    Blueprint, render_template, request, redirect, url_for, flash,
+    send_file, g, abort,
 )
-from ..models import db, Category, MenuItem
+from flask_login import login_user, logout_user, login_required, current_user
+from ..models import db, Category, MenuItem, Restaurant, User
 
 admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
 
 
-# ── auth ─────────────────────────────────────────────────────────────────────
+# ── helpers ─────────────────────────────────────────────────────────────────
+def _load_restaurant(slug):
+    restaurant = Restaurant.query.filter_by(slug=slug).first_or_404()
+    g.restaurant = restaurant
+    return restaurant
+
+
 def admin_required(view):
     @functools.wraps(view)
-    def wrapped(**kwargs):
-        if not session.get("admin"):
-            return redirect(url_for("admin.login", next=request.url))
-        return view(**kwargs)
+    @login_required
+    def wrapped(slug, **kwargs):
+        restaurant = _load_restaurant(slug)
+        # User must own this restaurant or be superadmin
+        if not current_user.is_superadmin and current_user.restaurant_id != restaurant.id:
+            abort(403)
+        return view(slug=slug, **kwargs)
     return wrapped
 
 
-@admin_bp.route("/login", methods=["GET", "POST"])
-def login():
+# ── auth ─────────────────────────────────────────────────────────────────────
+@admin_bp.route("/<slug>/admin/login", methods=["GET", "POST"])
+def login(slug):
+    restaurant = _load_restaurant(slug)
     if request.method == "POST":
+        email = request.form.get("email", "").strip()
         pw = request.form.get("password", "")
-        if pw == current_app.config["ADMIN_PASSWORD"]:
-            session["admin"] = True
-            dest = request.args.get("next") or url_for("admin.dashboard")
-            return redirect(dest)
-        flash("Incorrect password.", "error")
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(pw):
+            # Must belong to this restaurant or be superadmin
+            if user.is_superadmin or user.restaurant_id == restaurant.id:
+                login_user(user)
+                dest = request.args.get("next") or url_for("admin.dashboard", slug=slug)
+                return redirect(dest)
+        flash("Invalid email or password.", "error")
     return render_template("login.html")
 
 
-@admin_bp.route("/logout")
-def logout():
-    session.pop("admin", None)
-    return redirect(url_for("public.landing"))
+@admin_bp.route("/<slug>/admin/logout")
+def logout(slug):
+    logout_user()
+    return redirect(url_for("public.landing", slug=slug))
 
 
 # ── dashboard ────────────────────────────────────────────────────────────────
-@admin_bp.route("/")
+@admin_bp.route("/<slug>/admin/")
 @admin_required
-def dashboard():
-    categories = Category.query.order_by(Category.sort_order).all()
+def dashboard(slug):
+    categories = (
+        Category.query
+        .filter_by(restaurant_id=g.restaurant.id)
+        .order_by(Category.sort_order)
+        .all()
+    )
     return render_template("dashboard.html", categories=categories)
 
 
 # ── category CRUD ────────────────────────────────────────────────────────────
-@admin_bp.route("/category/new", methods=["GET", "POST"])
+@admin_bp.route("/<slug>/admin/category/new", methods=["GET", "POST"])
 @admin_required
-def category_new():
+def category_new(slug):
     if request.method == "POST":
         name = request.form["name"].strip()
         menu_type = request.form.get("menu_type", "dining")
@@ -57,52 +78,65 @@ def category_new():
         if not name:
             flash("Name is required.", "error")
             return render_template("category_form.html", cat=None)
-        cat = Category(name=name, menu_type=menu_type, sort_order=sort_order)
+        cat = Category(
+            restaurant_id=g.restaurant.id,
+            name=name,
+            menu_type=menu_type,
+            sort_order=sort_order,
+        )
         db.session.add(cat)
         db.session.commit()
         flash(f"Category '{name}' created.", "success")
-        return redirect(url_for("admin.dashboard"))
+        return redirect(url_for("admin.dashboard", slug=slug))
     return render_template("category_form.html", cat=None)
 
 
-@admin_bp.route("/category/<int:cat_id>/edit", methods=["GET", "POST"])
+@admin_bp.route("/<slug>/admin/category/<int:cat_id>/edit", methods=["GET", "POST"])
 @admin_required
-def category_edit(cat_id):
+def category_edit(slug, cat_id):
     cat = db.get_or_404(Category, cat_id)
+    if cat.restaurant_id != g.restaurant.id:
+        abort(404)
     if request.method == "POST":
         cat.name = request.form["name"].strip()
         cat.menu_type = request.form.get("menu_type", cat.menu_type)
         cat.sort_order = int(request.form.get("sort_order", cat.sort_order))
         db.session.commit()
         flash(f"Category '{cat.name}' updated.", "success")
-        return redirect(url_for("admin.dashboard"))
+        return redirect(url_for("admin.dashboard", slug=slug))
     return render_template("category_form.html", cat=cat)
 
 
-@admin_bp.route("/category/<int:cat_id>/delete", methods=["POST"])
+@admin_bp.route("/<slug>/admin/category/<int:cat_id>/delete", methods=["POST"])
 @admin_required
-def category_delete(cat_id):
+def category_delete(slug, cat_id):
     cat = db.get_or_404(Category, cat_id)
+    if cat.restaurant_id != g.restaurant.id:
+        abort(404)
     name = cat.name
     db.session.delete(cat)
     db.session.commit()
     flash(f"Category '{name}' and all its items deleted.", "success")
-    return redirect(url_for("admin.dashboard"))
+    return redirect(url_for("admin.dashboard", slug=slug))
 
 
 # ── item CRUD ────────────────────────────────────────────────────────────────
-@admin_bp.route("/category/<int:cat_id>/items")
+@admin_bp.route("/<slug>/admin/category/<int:cat_id>/items")
 @admin_required
-def item_list(cat_id):
+def item_list(slug, cat_id):
     cat = db.get_or_404(Category, cat_id)
+    if cat.restaurant_id != g.restaurant.id:
+        abort(404)
     items = MenuItem.query.filter_by(category_id=cat.id).order_by(MenuItem.sort_order).all()
     return render_template("item_list.html", category=cat, items=items)
 
 
-@admin_bp.route("/category/<int:cat_id>/item/new", methods=["GET", "POST"])
+@admin_bp.route("/<slug>/admin/category/<int:cat_id>/item/new", methods=["GET", "POST"])
 @admin_required
-def item_new(cat_id):
+def item_new(slug, cat_id):
     cat = db.get_or_404(Category, cat_id)
+    if cat.restaurant_id != g.restaurant.id:
+        abort(404)
     if request.method == "POST":
         name = request.form["name"].strip()
         desc = request.form.get("description", "").strip()
@@ -127,14 +161,16 @@ def item_new(cat_id):
         db.session.add(item)
         db.session.commit()
         flash(f"Item '{name}' created.", "success")
-        return redirect(url_for("admin.item_list", cat_id=cat.id))
+        return redirect(url_for("admin.item_list", slug=slug, cat_id=cat.id))
     return render_template("item_form.html", category=cat, item=None)
 
 
-@admin_bp.route("/item/<int:item_id>/edit", methods=["GET", "POST"])
+@admin_bp.route("/<slug>/admin/item/<int:item_id>/edit", methods=["GET", "POST"])
 @admin_required
-def item_edit(item_id):
+def item_edit(slug, item_id):
     item = db.get_or_404(MenuItem, item_id)
+    if item.category.restaurant_id != g.restaurant.id:
+        abort(404)
     cat = item.category
     if request.method == "POST":
         item.name = request.form["name"].strip()
@@ -145,48 +181,57 @@ def item_edit(item_id):
         item.category_id = int(request.form.get("category_id", item.category_id))
         db.session.commit()
         flash(f"Item '{item.name}' updated.", "success")
-        return redirect(url_for("admin.item_list", cat_id=item.category_id))
-    categories = Category.query.order_by(Category.sort_order).all()
+        return redirect(url_for("admin.item_list", slug=slug, cat_id=item.category_id))
+    categories = (
+        Category.query
+        .filter_by(restaurant_id=g.restaurant.id)
+        .order_by(Category.sort_order)
+        .all()
+    )
     return render_template("item_form.html", category=cat, item=item, categories=categories)
 
 
-@admin_bp.route("/item/<int:item_id>/delete", methods=["POST"])
+@admin_bp.route("/<slug>/admin/item/<int:item_id>/delete", methods=["POST"])
 @admin_required
-def item_delete(item_id):
+def item_delete(slug, item_id):
     item = db.get_or_404(MenuItem, item_id)
+    if item.category.restaurant_id != g.restaurant.id:
+        abort(404)
     cat_id = item.category_id
     name = item.name
     db.session.delete(item)
     db.session.commit()
     flash(f"Item '{name}' deleted.", "success")
-    return redirect(url_for("admin.item_list", cat_id=cat_id))
+    return redirect(url_for("admin.item_list", slug=slug, cat_id=cat_id))
 
 
-@admin_bp.route("/item/<int:item_id>/toggle", methods=["POST"])
+@admin_bp.route("/<slug>/admin/item/<int:item_id>/toggle", methods=["POST"])
 @admin_required
-def item_toggle(item_id):
+def item_toggle(slug, item_id):
     item = db.get_or_404(MenuItem, item_id)
+    if item.category.restaurant_id != g.restaurant.id:
+        abort(404)
     item.available = not item.available
     db.session.commit()
     status = "available" if item.available else "unavailable"
     flash(f"'{item.name}' marked as {status}.", "success")
-    return redirect(url_for("admin.item_list", cat_id=item.category_id))
+    return redirect(url_for("admin.item_list", slug=slug, cat_id=item.category_id))
 
 
 # ── QR code ──────────────────────────────────────────────────────────────────
-@admin_bp.route("/qr")
+@admin_bp.route("/<slug>/admin/qr")
 @admin_required
-def qr_code():
-    site_url = request.url_root.rstrip("/")
+def qr_code(slug):
+    site_url = request.url_root.rstrip("/") + url_for("public.landing", slug=slug)
     return render_template("qr.html", site_url=site_url)
 
 
-@admin_bp.route("/qr/download")
+@admin_bp.route("/<slug>/admin/qr/download")
 @admin_required
-def qr_download():
+def qr_download(slug):
     import qrcode
 
-    site_url = request.url_root.rstrip("/")
+    site_url = request.url_root.rstrip("/") + url_for("public.landing", slug=slug)
     qr = qrcode.QRCode(box_size=20, border=2)
     qr.add_data(site_url)
     qr.make(fit=True)
@@ -195,7 +240,7 @@ def qr_download():
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
-    return send_file(buf, mimetype="image/png", download_name="menuvi-qr.png")
+    return send_file(buf, mimetype="image/png", download_name=f"{slug}-qr.png")
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────

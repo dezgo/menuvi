@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit" if user else "New" }} User — Superadmin{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <h1>{{ "Edit" if user else "New" }} User</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for c, msg in messages %}
+  <div class="flash flash-{{ c }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" value="{{ user.email if user else '' }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password{{ " (leave blank to keep current)" if user else "" }}</label>
+      <input type="password" name="password" id="password" {{ "" if user else "required" }}>
+    </div>
+
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select name="role" id="role">
+        <option value="owner" {{ 'selected' if not user or user.role == 'owner' }}>Owner</option>
+        <option value="superadmin" {{ 'selected' if user and user.role == 'superadmin' }}>Superadmin</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="restaurant_id">Restaurant (optional for superadmins)</label>
+      <select name="restaurant_id" id="restaurant_id">
+        <option value="">— None —</option>
+        {% for r in restaurants %}
+        <option value="{{ r.id }}" {{ 'selected' if user and user.restaurant_id == r.id }}>{{ r.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-solid">{{ "Save" if user else "Create" }}</button>
+      <a href="{{ url_for('superadmin.dashboard') }}" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

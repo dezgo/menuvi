@@ -6,7 +6,7 @@
 <div class="admin-page">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
     <h1>{{ category.name }}</h1>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm">&#8592; Back</a>
+    <a href="{{ url_for('admin.dashboard', slug=restaurant_slug) }}" class="btn btn-sm">&#8592; Back</a>
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -16,7 +16,7 @@
   {% endwith %}
 
   <div style="margin-bottom:1rem;">
-    <a href="{{ url_for('admin.item_new', cat_id=category.id) }}" class="btn btn-sm btn-solid">+ New Item</a>
+    <a href="{{ url_for('admin.item_new', slug=restaurant_slug, cat_id=category.id) }}" class="btn btn-sm btn-solid">+ New Item</a>
   </div>
 
   <table class="admin-table">
@@ -39,7 +39,7 @@
         </td>
         <td>{{ item.price_display }}</td>
         <td>
-          <form method="post" action="{{ url_for('admin.item_toggle', item_id=item.id) }}">
+          <form method="post" action="{{ url_for('admin.item_toggle', slug=restaurant_slug, item_id=item.id) }}">
             <button type="submit" class="btn btn-sm" style="font-size:0.7rem">
               {{ "Yes" if item.available else "No" }}
             </button>
@@ -47,8 +47,8 @@
         </td>
         <td>
           <div class="inline-actions">
-            <a href="{{ url_for('admin.item_edit', item_id=item.id) }}" class="btn btn-sm">Edit</a>
-            <form method="post" action="{{ url_for('admin.item_delete', item_id=item.id) }}"
+            <a href="{{ url_for('admin.item_edit', slug=restaurant_slug, item_id=item.id) }}" class="btn btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('admin.item_delete', slug=restaurant_slug, item_id=item.id) }}"
                   onsubmit="return confirm('Delete {{ item.name }}?')">
               <button type="submit" class="btn btn-sm btn-danger">Del</button>
             </form>

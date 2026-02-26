@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Login — {{ restaurant_name }}{% endblock %}
+{% block title %}Superadmin Login — MenuVi{% endblock %}
 
 {% block body %}
 <div class="admin-login">
-  <h1 style="color:var(--gold)">Admin</h1>
-  <p style="color:var(--text-dim); margin-bottom:1.5rem;">{{ restaurant_name }}</p>
+  <h1 style="color:var(--gold)">Superadmin</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% for cat, msg in messages %}

@@ -11,8 +11,10 @@ def test_price_display_none():
     assert item.price_display == ""
 
 
-def test_category_creation(db):
-    cat = Category(name="Mains", menu_type="dining", sort_order=0)
+def test_category_creation(db, restaurant):
+    cat = Category(
+        restaurant_id=restaurant.id, name="Mains", menu_type="dining", sort_order=0,
+    )
     db.session.add(cat)
     db.session.commit()
 
@@ -21,8 +23,8 @@ def test_category_creation(db):
     assert cat.menu_type == "dining"
 
 
-def test_item_belongs_to_category(db):
-    cat = Category(name="Starters", sort_order=0)
+def test_item_belongs_to_category(db, restaurant):
+    cat = Category(restaurant_id=restaurant.id, name="Starters", sort_order=0)
     db.session.add(cat)
     db.session.flush()
 

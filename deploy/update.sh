@@ -5,6 +5,7 @@
 set -euo pipefail
 
 APP_DIR="/var/www/menuvi"
+APP_USER="www-data"
 
 cd "$APP_DIR"
 

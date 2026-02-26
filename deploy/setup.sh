@@ -31,7 +31,6 @@ if [ ! -f "$APP_DIR/.env" ]; then
     # Generate a random secret key
     SECRET=$(python3 -c "import secrets; print(secrets.token_hex(32))")
     sed -i "s/change-me-to-a-random-string/$SECRET/" "$APP_DIR/.env"
-    echo "    !! Edit $APP_DIR/.env to set ADMIN_PASSWORD and RESTAURANT_NAME"
 fi
 
 echo "==> Ensuring instance directory exists"
@@ -57,5 +56,8 @@ nginx -t && systemctl reload nginx
 echo ""
 echo "==> Done!"
 echo "    App running at http://$(hostname -I | awk '{print $1}')"
-echo "    Edit /opt/menuvi/.env then: sudo systemctl restart menuvi"
-echo "    For HTTPS: sudo certbot --nginx -d menuvi.appfoundry.cc"
+echo ""
+echo "    Next steps:"
+echo "    1. Create a superadmin user:"
+echo "       sudo -u $APP_USER FLASK_APP=menuvi $APP_DIR/.venv/bin/flask create-superadmin"
+echo "    2. For HTTPS: sudo certbot --nginx -d menuvi.appfoundry.cc"

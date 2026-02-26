@@ -4,9 +4,9 @@
 
 {% block body %}
 <header class="topbar">
-  <a href="{{ url_for('public.landing') }}" class="topbar-back">&#8592; Menu</a>
+  <a href="{{ url_for('public.landing', slug=restaurant_slug) }}" class="topbar-back">&#8592; Menu</a>
   <span class="topbar-title">{{ restaurant_name }}</span>
-  <a href="{{ url_for('public.picks') }}" class="topbar-picks">
+  <a href="{{ url_for('public.picks', slug=restaurant_slug) }}" class="topbar-picks">
     My Picks
     {% if picks %}<span class="badge">{{ picks|length }}</span>{% endif %}
   </a>
@@ -18,14 +18,14 @@
   </div>
 
   <div class="search-wrap">
-    <form action="{{ url_for('public.search') }}" method="get">
+    <form action="{{ url_for('public.search', slug=restaurant_slug) }}" method="get">
       <input type="search" name="q" class="search-input" placeholder="Search items..." autocomplete="off">
     </form>
   </div>
 
   <div class="cat-list">
     {% for cat in categories %}
-    <a href="{{ url_for('public.category', category_id=cat.id) }}" class="cat-card">
+    <a href="{{ url_for('public.category', slug=restaurant_slug, category_id=cat.id) }}" class="cat-card">
       <h3>{{ cat.name }}</h3>
       <span class="count">{{ cat.items|selectattr('available')|list|length }} items</span>
     </a>

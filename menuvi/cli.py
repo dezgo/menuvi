@@ -9,20 +9,40 @@ def register_cli(app: Flask):
     @click.option("--drop", is_flag=True, help="Drop existing data before seeding.")
     def seed_db(drop):
         """Populate the database with the Jewel of India menu."""
-        from .models import db, Category, MenuItem
+        from .models import db, Restaurant, Category, MenuItem
         from .seed_data import MENU
 
         if drop:
             click.echo("Dropping existing menu data...")
             MenuItem.query.delete()
             Category.query.delete()
+            Restaurant.query.delete()
             db.session.commit()
+
+        # Create or get the restaurant
+        restaurant = Restaurant.query.filter_by(slug="jewel-of-india").first()
+        if not restaurant:
+            restaurant = Restaurant(
+                name="Jewel of India",
+                slug="jewel-of-india",
+                tagline="Fine Indian Cuisine",
+                brand_color="#c9a84c",
+                brand_color_dim="#a68939",
+            )
+            db.session.add(restaurant)
+            db.session.flush()
 
         cat_order = 0
         for cat_name, items in MENU.items():
-            cat = Category.query.filter_by(name=cat_name).first()
+            cat = Category.query.filter_by(
+                restaurant_id=restaurant.id, name=cat_name,
+            ).first()
             if not cat:
-                cat = Category(name=cat_name, sort_order=cat_order)
+                cat = Category(
+                    restaurant_id=restaurant.id,
+                    name=cat_name,
+                    sort_order=cat_order,
+                )
                 db.session.add(cat)
                 db.session.flush()
 
@@ -44,4 +64,27 @@ def register_cli(app: Flask):
 
         db.session.commit()
         total = MenuItem.query.count()
-        click.echo(f"Seeded {total} menu items across {Category.query.count()} categories.")
+        click.echo(
+            f"Seeded {total} menu items across "
+            f"{Category.query.filter_by(restaurant_id=restaurant.id).count()} categories "
+            f"for '{restaurant.name}'."
+        )
+
+    @app.cli.command("create-superadmin")
+    @click.option("--email", prompt=True, help="Superadmin email address.")
+    @click.option("--password", prompt=True, hide_input=True,
+                  confirmation_prompt=True, help="Superadmin password.")
+    def create_superadmin(email, password):
+        """Create a superadmin user."""
+        from .models import db, User
+
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            click.echo(f"User '{email}' already exists.")
+            return
+
+        user = User(email=email, role="superadmin")
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        click.echo(f"Superadmin '{email}' created.")

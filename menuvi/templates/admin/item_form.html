@@ -53,7 +53,7 @@
 
     <div class="form-actions">
       <button type="submit" class="btn btn-solid">{{ "Save" if item else "Create" }}</button>
-      <a href="{{ url_for('admin.item_list', cat_id=category.id) }}" class="btn">Cancel</a>
+      <a href="{{ url_for('admin.item_list', slug=restaurant_slug, cat_id=category.id) }}" class="btn">Cancel</a>
     </div>
   </form>
 </div>

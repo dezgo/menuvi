@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Superadmin — MenuVi{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1>Superadmin</h1>
+    <a href="{{ url_for('superadmin.logout') }}" class="btn btn-sm">Logout</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h2>Restaurants</h2>
+  <div style="margin-bottom:1rem;">
+    <a href="{{ url_for('superadmin.restaurant_new') }}" class="btn btn-sm btn-solid">+ New Restaurant</a>
+  </div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Categories</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in restaurants %}
+      <tr>
+        <td>
+          <a href="{{ url_for('public.landing', slug=r.slug) }}">{{ r.name }}</a>
+        </td>
+        <td><code>{{ r.slug }}</code></td>
+        <td>{{ r.categories|length }}</td>
+        <td>
+          <div class="inline-actions">
+            <a href="{{ url_for('admin.dashboard', slug=r.slug) }}" class="btn btn-sm">Menu</a>
+            <a href="{{ url_for('superadmin.restaurant_edit', restaurant_id=r.id) }}" class="btn btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('superadmin.restaurant_delete', restaurant_id=r.id) }}"
+                  onsubmit="return confirm('Delete {{ r.name }} and ALL its data?')">
+              <button type="submit" class="btn btn-sm btn-danger">Del</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center; color:var(--text-dim)">No restaurants yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:2rem;">Users</h2>
+  <div style="margin-bottom:1rem;">
+    <a href="{{ url_for('superadmin.user_new') }}" class="btn btn-sm btn-solid">+ New User</a>
+  </div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Restaurant</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.email }}</td>
+        <td>{{ u.role }}</td>
+        <td>{{ u.restaurant.name if u.restaurant else '—' }}</td>
+        <td>
+          <div class="inline-actions">
+            <a href="{{ url_for('superadmin.user_edit', user_id=u.id) }}" class="btn btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('superadmin.user_delete', user_id=u.id) }}"
+                  onsubmit="return confirm('Delete user {{ u.email }}?')">
+              <button type="submit" class="btn btn-sm btn-danger">Del</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center; color:var(--text-dim)">No users yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}MenuVi — Restaurant Directory{% endblock %}
+
+{% block body %}
+<div class="landing">
+  <h1>MenuVi</h1>
+  <p class="subtitle">Digital Menus</p>
+
+  <div class="cat-list" style="margin-top:2rem;">
+    {% for r in restaurants %}
+    <a href="{{ url_for('public.landing', slug=r.slug) }}" class="cat-card"
+       style="border-color:{{ r.brand_color }};">
+      <h3>{{ r.name }}</h3>
+      {% if r.tagline %}
+      <span class="count">{{ r.tagline }}</span>
+      {% endif %}
+    </a>
+    {% else %}
+    <p style="text-align:center; color:var(--text-dim); padding:3rem 0;">No restaurants yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

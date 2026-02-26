@@ -4,9 +4,9 @@
 
 {% block body %}
 <header class="topbar">
-  <a href="{{ url_for('public.category', category_id=item.category_id) }}" class="topbar-back">&#8592; {{ item.category.name }}</a>
+  <a href="{{ url_for('public.category', slug=restaurant_slug, category_id=item.category_id) }}" class="topbar-back">&#8592; {{ item.category.name }}</a>
   <span class="topbar-title">{{ restaurant_name }}</span>
-  <a href="{{ url_for('public.picks') }}" class="topbar-picks">
+  <a href="{{ url_for('public.picks', slug=restaurant_slug) }}" class="topbar-picks">
     My Picks
     {% if picks %}<span class="badge">{{ picks|length }}</span>{% endif %}
   </a>
@@ -24,11 +24,11 @@
 
   <div>
     {% if item.id in picks %}
-      <form method="post" action="{{ url_for('public.pick_remove', item_id=item.id) }}">
+      <form method="post" action="{{ url_for('public.pick_remove', slug=restaurant_slug, item_id=item.id) }}">
         <button type="submit" class="btn btn-danger">Remove from Picks</button>
       </form>
     {% else %}
-      <form method="post" action="{{ url_for('public.pick_add', item_id=item.id) }}" class="pick-form">
+      <form method="post" action="{{ url_for('public.pick_add', slug=restaurant_slug, item_id=item.id) }}" class="pick-form">
         <button type="submit" class="btn btn-solid">Add to My Picks</button>
       </form>
     {% endif %}

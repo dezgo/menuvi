@@ -8,10 +8,10 @@
   <p class="subtitle">{{ restaurant_tagline }}</p>
 
   <div class="landing-choices">
-    <a href="{{ url_for('public.menu', menu_type='dining') }}" class="landing-btn">
+    <a href="{{ url_for('public.menu', slug=restaurant_slug, menu_type='dining') }}" class="landing-btn">
       Dining Menu
     </a>
-    <a href="{{ url_for('public.menu', menu_type='beverages') }}" class="landing-btn">
+    <a href="{{ url_for('public.menu', slug=restaurant_slug, menu_type='beverages') }}" class="landing-btn">
       Beverages
     </a>
   </div>
